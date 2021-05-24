@@ -31,7 +31,7 @@
 Persistence 클래스가 persistence.xml을 참고하여
 'jpabook'인 영속성 유닛(persistence-unit)을 찾아 엔티티 매니저 팩토리를 생성.
 
-![](.\EntityManager.JPG)
+![](./EntityManager.JPG)
 
 ### 엔티티 매니저 팩토리 생성
 
