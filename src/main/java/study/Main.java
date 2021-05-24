@@ -15,7 +15,7 @@ public class Main {
         // 트랜잭션
         EntityTransaction tx = em.getTransaction();
 
-        // 스레드 단위 실행
+        // 스레드 단위 실행 
         try{
             tx.begin(); // 트랜잭션 시작
             do_something(em);
