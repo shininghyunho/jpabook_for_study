@@ -1,417 +1,431 @@
-# 엔티티 매핑
+# 연관관계 매핑 기초
 
-JPA를 사용함에 있어 엔티티와 테이블을 매핑하는것이 중요하다.
+객체의 참조와 테이블의 외래키를 이용한 관계는 다르다는걸 앞장 예제에서 살펴봤다.
 
-그리고 매핑을 하는데에 있어 어노테이션을 숙지해야한다.
+이번장에서는 객체의 참조와 테이블의 외래 키를 매핑하는것이다.
 
-- 객체와 테이블 매핑 : @Entity, @Table
-- 기본 키 매핑 : @Id
-- 필드와 컬럼 매핑 : @Column
-- 연관관계 매핑 : @ManyToOne, @JoinColumn
 
-연관관계 매핑은 5,6,7장에서
 
-## @Entity
+핵심 키워드
 
-JPA를 사용해 테이블과 매핑할 클래스는 @Entity 어노테이션이 필수로 붙어있어야한다.
+- 방향
 
-name 속성을 사용하지 않으면 클래스 이름 그대로 엔티티 클래스를 사용한다.
+  - 단방향 : 회원 -> 팀 처럼 한쪽만 참조하는것, 객체관계에서만 존재
+  - 양방향 : 회원 -> 팀, 팀 -> 회원 처럼 서로 참조하는것. 테이블 관계는 항상 양방향관계.
 
-주의사항
+- 다중성 
 
-- 기본 생성자는 필수
-- final 클래스, enum, interface, inner 클래스에는 사용 불가.
-- 저장할 필드에 final을 사용하면 안됨.
+  1:N, N:1 N:M 처럼 포함관계를 나타냄. 한 팀에 여러 회원이 있으면 팀과 회원은 1:N 관계
 
-## @Table
+- 연관관계의 주인
 
-엔티티와 매핑할 테이블을 지정한다.
+  객체를 양방향 연관관계로 만들면 연관관계의 주인을 정해야함.
 
-## 다양한 매핑 사용
 
-Member 클래스에 다음과 같이 추가한다.
 
-```
-// 회원의 타입 구분
-// 자바의 enum 을 사용하기 위해 @Enumerated 사용
-@Enumerated(EnumType.STRING)
-private RoleType roleType;
+## 단방향 연관관계
 
-// 자바의 날짜 타입을 @Temporal 을 사용해 매핑
-@Temporal(TemporalType.TIMESTAMP)
-private Date createdDate;
+객체는 참조를 통해 다른 객체에 접근한다. member 객체에서 team 객체에 접근하려면 Member.team같은 객체로 접근해야한다. (단방향)
 
-@Temporal(TemporalType.TIMESTAMP)
-private Date lastModifiedDate;
+반면 테이블은 외래키(MEMBER.TEAM_ID)를 가지고 조인을 통해 다른 테이블에 접근한다.(양방향)
 
-// 주석 사용. VARCHAR 대신에 CLOB 타입으로 저장.
-// @Lob 을 사용하면 CLOB, BLOB 타입에 매핑 가능.
-@Lob
-private String description;
-```
+![](./img/5_N1.JPG)
 
-## DB 스키마 자동 생성
+그래서 다른 객체를 참조하기 위해 Member.team과 MEMBER.TEAM_ID 를 매핑해야한다.
 
-DB에 테이블을 직접 만들어주지 않고 자동으로 생성해줄 수 있다.
-
-단 테스트 단계에서만 사용하고 실제 운영서버에서는 DDL 을 사용해서는 안된다.
+이를 연관관계 매핑이라고 한다.
 
 ```
-<!-- DB에 테이블 자동 생성 -->
-<property name="hibernate.hbm2ddl.auto" value="create" />
+@ManyToOne
+@JoinColumn(name="TEAM_ID")
+private Team team;
 ```
 
+### @ManyToOne
 
+다대일(N:1) 관계라는 매핑 정보다. 연관관계를 맺을때 다중성을 나타내는 어노테이션은 필수다.
 
-또한 자바에서는 myClass 처럼 카멜 케이스를 쓰는게 일반적이고
+### @JoinColumn
 
-DB에서는 my_class 처럼 언더스코어 방식을 쓰는게 일반적이다.
+조인 컬럼은 외래 키를 매핑할때 사용하는데 name 속성으로 매핑할 외래 키 이름을 지정한다. 상대방에 외래키 이름을 지정하는 것이다.
 
-이 또한 JPA에서 자동으로 바꿔줄 수 있다.
+이 어노테이션은 생략이 가능한데 그러면 외래키를
 
-```
-<!-- 기본 매핑 이름 자바에서는 카멜 DB 에서는 언더스코어 -->
-<property name="hibernate.ejb.naming_strategy" value="org.hibernate.cfg.ImprovedNamingStrategy" />
-```
+- 필드명+_+참조하는 테이블의 컬럼명
 
-
-
-## DDL 생성 기능
-
-JPA에서 자동으로 스키마를 생성해주는데 이때 DDL에 제약 조건을 걸어줄 수 있다.
-
-```
-@Column(name="NAME",nullable = false,length = 10)
-private String username;
-```
-
-username은 not null 이고 varchar(10) 크기로 생성된다.
+같이 설정한다.
 
 
 
-유니크 설정도 가능하다.
+다음과 같이 정의한다면
 
 ```
-@Table(name="Member",uniqueConstraints = {
-        @UniqueConstraint(
-                name="NAME_AGE_UNIQUE",
-                columnNames = {"NAME","AGE"}
-        )
-}) 
+@ManyToOne
+private Team team; // 필드명
 ```
 
-그러면 다음과 같이 테이블 생성시 속성이 추가된다.
+team_TEAM_ID (필드명_참조하는 테이블의 컬럼명)으로 외래키를 설정한다.
 
-![](./img/unique_code.JPG)
-
-
-
-이러한 DDL 기능은 테이블 생성에만 영향을 끼치고
-
-JPA 실행 로직 자체에는 영향을 주지 않는다.
+> 즉 주인일때 JoinColumn을 사용하는군
 
 
 
-## 기본 키 매핑
+## 연관관계 사용
 
-데이터베이스마다 기본 키를 생성하는 방식이 서로 달라
+### 저장
 
-데이터베이스가 기본 키를 생성해주는 전략에는 여러가지가 있다.
-
-- 직접 할당 : 기본 키를 애플리케이션에서 직접 할당.
-- 자동 생성 : 대리 키 사용 방식
-  - IDENTITY : 기본 키 생성을 데이터베이스에서 위임
-  - SEQUENCE : 데이터베이스 시퀀스를 사용해 기본 키 할당
-  - TABLE : 키 생성 테이블을 사용
-
-
-
-이렇게 자동 생성 전략이 다른 이유는 데이터베이스 벤더마다 지원하는 방식이 달라서 그렇다.
-
-오라클은 시퀀스를 제공하지만 MySQL은 지원하지 않는다. (대신 MySQL은 auto_increment)
-
-그래서 IDENTITY, SEQUENCE 전략은 사용하는 DB에 의존.
-
-TABLE 전략은 키 생성용 테이블을 따로 만들어 시퀀스처럼 사용하는 방식.
-
-
-
-기본 키를 직접할당하려면 @Id를 쓰면되고
-
-자동 생성 전략을 사용하려면 @Id에 @GeneratedValue를 추가로 쓰면된다.
-
-
-
-또한 키 생성 전략을 사용하려면 다음 속성을 반드시 추가해야한다.
+맴버가 팀을 참조해주면 된다. 이후 맴버도 영속 상태로 만들어준다.
 
 ```
-<property name="hibernate.id.new_generator_mappings" value="true" />
-```
+Team team1 = new Team();
+em.persist(team1);
 
-하이버네이트는 더 효과적인 키 생성 전략을 개발했는데 호환성을 유지하기위해 false가 기본값이다. 기존 시스템 유지보수를 하는게 아니면 true로 사용.
+Member member1 = new Member();
+member1.setTeam(team1);
+em.persist(member1);
 
-
-
-### 기본 키 직접 할당 전략
-
-직접 기본키를 넣어주는 방식이다.
-
-엔티티는 다음처럼 설정했을때
-
-```
-@Id
-@Column(name="id")
-private String id;
-```
-
-persist 영속성 컨텍스트에 저장하기 전에 각각 값을 넣어주는 것이다.
-
-```
-Board board = new Board();
-board.setId("id1");
-em.persist(board);
+Member member2 = new Member();
+member2.setTeam(team1);
+em.persist(member2);
 ```
 
 
 
-### IDENTITY 전략
+### 조회
 
-데이터베이스에서 기본키 생성을 위임받는 경우다.
+조회는 객체 그래프 탐색(객체 연관관계를 사용한 조회)와 객체지향 쿼리(JPQL) 사용이 있다.
 
-주로 MySQL, PostgreSQL, SQL Server, DB2에서 사용한다.
+- 객체 그래프 탐색
 
-제일 많이 쓰는 MySQL에 AUTO_INCREMENT 기능이 있다.
-
-```
-CREATE TABLE BOARD{
-	ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	DATA VARCHAR(255)
-};
-```
-
-데이터 삽입시 자동으로 ID값이  1,2 증가하며 채워진다.
-
-
-
-이를 @GeneratedValue 어노테이션에 전략을 GenerationType.IDENTITY로 설정해 자동 증가를 할수있다.
-
-```
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
-```
-
-(단 데이터베이스에서 생성되는 값이기 떄문에 조회하려면 반드시 추가로 DB 조회를 해야한다. JDBC3에 추가된 Statemen,getGeneratedKeys()를 사용하면 저장하면서 바로 생성된 기본키를 조회 할 수 있다. 하이버네이트는 이 메소드를 사용해 한 번만 데이터베이스와 통신한다.)
-
-### SEQUENCE 전략
-
-데이터베이스 시퀀스는 유일한 값을 순서대로 생성하는 특별한 데이터베이스 오브젝트다.
-
-이 시퀀스를 사용해 기본 키를 생성하는 전략인데, 오라클, PostgreSQL, DB2, H2 데이터베이스에서 사용이 가능하다.
-
-
-
-시퀀스 DDL
-
-```
-CREATE SEQUENCE BOARD_SEQ START WITH 1 INCREMENT BY 1;
-```
-
-
-
-매핑 코드
-
-```
-@Entity
-@SequenceGenerator(
-	name="BOARD_SEQ_GENERATOR",
-	sequenceName="BOARD_SEQ",
-	initialValue=1,allocationSize=1
-)
-
-...
-
-@Id
-@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "BOARD_SEQ_GENERATOR")
-private Long id;
-```
-
-
-
-BOARD_SEQ와 BOARD_SEQ_GENERATOR를 매핑하여
-
-id 값을 BOARD_SEQ_GENERATOR 시퀀스 생성기가 할당한다.
-
-
-
-IDENTITY와 호출 방식은 동일한데 차이점은
-
-SEQUENCE 전략은 em.persist()를 호출할 떄 먼저 데이터베이스 시퀀스를 사용해 식별자를 조회하고, 조회한 식별자를 엔티티에 할당한 후 엔티티를 영속성 컨텍스트에 저장한다. 그래서 플러시하지 않아도 아이디를 사용할 수 있다. 
-
-
-
-### TABLE 전략
-
-TABLE 전략은 키 생성 전용 테이블을 따로 만들고 여기에 이름과 값으로 사용할 컬럼을 만들어 데이터베이스 시퀀스를 흉내내는 전략이다. 이 전략은 모든 DB에서 사용이 가능하다.
-
-단 키 생성 용도의 테이블을 만들어야한다.
-
-```
-CREATE TABLE MY_SEQUENCES(
-	sequence_name varchar(255) not null,
-	next_val bigint,
-	primary key (sequence_name)
-)
-```
-
-sequence_name 컬럼으로 시퀀스 이름을 사용하고 next_val 을 시퀀스 값으로 사용한다.
-
-
-
-```
-@TableGenerator(
-        name="BOARD_SEQ_GENERATOR",
-        table = "MY_SEQUENCES",
-        pkColumnValue = "BOARD_SEQ",
-        allocationSize = 1
-)
-
-...
-
-@Id
-@GeneratedValue(strategy = GenerationType.TABLE, generator = "BOARD_SEQ_GENERATOR")
-```
-
-먼저 @TableGenerator를 사용해 테이블 키 생성기를 등록한다.
-
-해당 예제에서는  BOARD_SEQ_GENERATOR라는 테이블 키 생성기를 등록하고 MY_SEQUENCES 테이블과 매핑했다.
-
-그리고 GenerationType.TABLE을 선택해 TABLE 전략을 설정하고
-
-@GeneratedValue.generator로 테이블 생성기를 지정했다.
-
-이렇게해서 id 식별자 값은 BOARD_SEQ_GENERATOR 테이블 키 생성기가 할당한다. 
-
-
-
-엔티티를 넣어주면 다음과같이 할당된다.
-
-![](./img/result_table_st.JPG)
-
-( 예제는 따로 해보지 못했음 )
-
-
-
-### AUTO 전략
-
-데이터베이스 방언에 따라 기본키를 자동으로 생성해준다.
-
-MySQL을 사용하면 IDENTITY, 오라클을 사용하면 SEQUENCE가 선택된다.
-
-```
-@Id
-@GeneratedValue(strategy = GenerationType.AUTO)
-private Long id;
-```
-
-아니면 그냥 GeneratedValue 전략도 AUTO기 떄문에 생략해도된다.
-
-```
-@Id @GeneratedValue
-private Long id;
-```
-
-
-
-AUTO 사용시 SEQENCE나 TABLE 전략은 시퀀스나 키 생성 테이블을 미리 만들어 둬야한다. 근데 이또한 스키마 자동 생성 기능을 사용한다면 하이버네이트가 기본값을 사용해 적절한 시퀀스나 키 생성용 테이블을 만들어준다.
-
-
-
-## 필드와 컬럼 매핑
-
-### @Column
-
-객체 필드를 테이블 컬럼에 매핑한다.
-
-속성 중 name, nullable이 주로 사용된다.
-
-
-
-### @Enumerated
-
-자바의 enum 타입을 매핑할 떄 사용.
-
-enum은 데이터베이스 저장시 숫자로 저장하면 순서변경시 문제가 생긴다.
-
-ex) ADMIN, USER에서 ADMIN, NEW, USER 로 순서를 변경할 수 없다.
-
-EnumType.STRING을 사용하면 순서를 바꿀 수 있는대신에 저장 크기는 커진다.
-
-
-
-### @Temporal
-
-날짜 타입을 매핑할때 사용.
-
-- TemporalType.DATE - 날짜
-- TemporalType.TIME - 시간
-- TemporalType.TIMESTAMP - 날짜와 시간
-
-MySQL에서는 datetime을 예약어로 쓰는데 방언 설정 덕분에 문제가 되지 않는다.
-
-
-
-### @Lob
-
-데이터베이스 BLOB, CLOB 타입과 매핑한다.
-
-@Lob은 속성을 지정할수 없지만 매핑 필드 타입이 문자면 CLOB이고 나머지는 BLOB으로 매핑한다.
-
-
-
-### @Transient
-
-이 필드는 매핑하지 않는다. DB에 저장하지도 조회하지도 않는다. 임시로 저장할때 사용한다.
-
-
-
-### @Access
-
-JPA가 엔티티 데이터를 접근하는 방식을 지정.
-
-- 필드 접근 : AccessType.FIELD로 지정. 필드에 직접 접근한다.
-
-  @Id가 필드에 있으면 필드로 접근을 선택한것과 같아서 @Access를 생략해도 된다.
-
-- 프로퍼티 접근 : AccessType.PROPERTY로 지정. 접근자(Getter)를 사용해 접근.
-
-  @Id를 써서 기본 전략은 필드로 하고 특정 필드만 프로퍼티 전략으로 쓸 수 있다.
+  member.getTeam()을 사용해 member와 연관된 team 엔티티를 조회하는 방법.
 
   ```
-  @Access(AccessType.PROPERTY)
-  public String getFullName(){
-  	return firstName+lastName;
-  }
+  Member member = em.find(Member.class,"member1");
+  Team team = member.getTeam(); // 객체 그래프 탐색
   ```
+
+- 객체지향 쿼리 사용 (JPQL)
+
+  JPQL도 조인을 사용할 수가 있다.
+
+  ```
+  select m from Member m join m.team t
+  where t.name=:teamName
+  ```
+
+  (:로 시작하는것은 파라미터틀 바인딩받는 문법)
+
+  SQL로는 다음과 같이 실행된다.
+
+  ```
+  SELECT M.* FROM MEMBER MEMBER
+  INNER JOIN
+  	TEAM TEAM ON MEMBER.TEAM_ID = TEAM1_.ID
+  WHERE
+  	TEAM1_.NAME='팀1'
+  ```
+
+
+
+### 수정
+
+엔티티를 단순히 수정해주면 더티 체킹으로 알아서 UPDATE 문을 날려준다.
+
+```
+Member member = em.find(Member.class,"member1");
+member.setTeam(team2);
+```
+
+
+
+### 연관관계 제거
+
+null로 변경해준다.
+
+```
+Member member = em.find(Member.class,"member1");
+member.setTeam(null);
+```
+
+
+
+### 연관관계 삭제
+
+연관된 엔티티를 삭제하려면 외래 키 제약조건에 위배되지 않게 먼저 연관관계를 제거해야한다.
+
+```
+member1.setTeam(null);
+member2.setTeam(null);
+em.remove(team);
+```
+
+ 
+
+## 양방향 연관관계
+
+객체 관계는 단방향만 있기에 단방향을 두개사용해 양방향처럼 사용한다.
+
+위에 예제에서는 맴버에서 팀으로만 접근했는데 팀에서 맴버로 접근하려면 양방향 관계를 가져야한다.
+
+팀은 맴버와 일대다 관계이기 때문에 여러건의 맴버와 관계를 맺기 위해서 컬렉션을 사용한다.
+
+
+
+```
+// Team 클래스
+@OneToMany(mappedBy = "team")
+private List<Member> members = new ArrayList<Member>();
+```
+
+팀에서 맴버와 매핑할때 일대다 관계이기 때문에 @OneToMany를 사용했다. mappedBy 속성은 양방향 매핑일 때 사용하는데 반대쪽 매핑 필드 이름을 넣어주면 된다.
+
+
+
+조회도 이제 팀에서 맴버로 가능하다. 
+
+```
+Team team = em.find(Team.class,"team1");
+List<Member> members = team.getMembers(); // 팀 -> 회원
+```
+
+
+
+## 연관관계의 주인
+
+테이블은 외래 키 하나로 두 테이블의 연관관계를 관리한다.
+
+엔티티를 단방향으로 매핑하면 참조를 하나만 사용하므로 객체는 서로를 참조하도록한다. 그러면 객체의 연관관계를 관리하는 포인트는 2곳이 된다.
+
+따라서 엔티티를 양방향 연관관계로 설정하면 객체의 참조는 둘인데 외래 키는 하나다. 차이가 발생하는 것이다.
+
+이러한 두 객체 연관관계 중 하나를 정해 테이블의 외래키를 관리해야하는데 이를 연관관계의 주인이라 한다.
+
+> mappedBy를 가지면 주인이 아니구나
+
+### 양방향 매핑의 규칙
+
+연관관계의 주인은 데이터베이스 연관관계와 매핑되고 외래 키를 관리(등록, 수정, 삭제) 할 수 있다. 반면 주인이 아닌쪽은 읽기만 가능하다. 주인은 mappedBy 속성을 사용하지 않고 주인이 아니면 mappedBy 속성을 사용해 속성의 값으로 주인을 지정한다.
+
+
+
+>  그럼 어떤 기준으로 주인을 정할까?
+
+
+
+연관관계의 주인을 정한다는건 외래 키 관리자를 선택하는 것이다. 그래서 외래 키가 있는 곳을 주인으로 정한다.(외래 키가 없는곳으로 정하면 외래 키가 있는곳을 또 조회해야한다.)
+
+데이터베이스 테이블의 다대일, 일대다 관계에서는 항상 다 쪽이 외래키를 가져 주인이 된다.
+
+
+
+## 양방향 연관관계 저장
+
+주인이 정해졌으니 주인에 의해서만 관계가 저장된다. 어찌보면 당연하다 주인이 외래키를 관리하기 떄문이다.
+
+
+
+다음과 같이 주인이 아닌 객체에만 저장하려고하면 무시된다.
+
+```
+team1.getMembers().add(member1)
+```
+
+
+
+반대로 연관관계 설정은 주인만 한다.
+
+```
+member1.setTeam(team1);
+member2.setTeam(team1);
+```
+
+
+
+### 순수한 객체까지 고려한 양방향 연관관계
+
+JPA가 아닌 순수한 객체에서는 주인 객체에 연관관계를 설정해도 반대객체(주인이 아닌)에서 접근하려고 하면 접근할 수가 없다.
+
+```
+member1.setTeam(team1);
+
+List<Member> members = team1.getMembers(); // 빈 리스트
+```
+
+
+
+그래서 이러한 문제를 해결하기 위해 양쪽 모두 관계를 설정해준다.
+
+```
+// 연관관계의 주인
+member1.setTeam(team1); // 연관관계 member1 -> team1
+// 주인이 아니기에 저장되지 않음
+team1.getMembers().add(member1); // 연관관계 team1 -> member1
+```
+
+이렇게 설정하면 JPA, 순수객체 모두 정상적으로 동작한다.
+
+
+
+- Member.team : 연관관계의 주인, 이 값으로 외래 키를 관리
+- Team.members : 연관관계의 주인이 아님. 저장시에는 사용되지 않음.
+
+
+
+> 그러면 양방향 관계에서는 양쪽 모두 관계를 맺어주는게 맞겠다.
+
+
+
+### 연관관계 편의 메소드
+
+양방향 연관관계시 어차피 둘다 연관관계를 맺어야한다면 한 메소드에 넣어주면 될것이다.
+
+```
+// Member 클래스
+public void setTeam(Team team){
+	this.team = team;
+	team.getMembers().add(this);
+}
+```
+
+그러면 양방향을 신경써주지 않아도 된다.
+
+
+
+#### 연관관계 편의 메소드 주의 사항
+
+다음처럼 맴버1이 팀A와 양방향 관계를 맺으면 다음과 같다.
+
+![](./img/5_caution1.JPG)
+
+
+
+그러면 맴버1이 팀B와 새로운 관계를 맺으면 어떻게 될까.
+
+
+
+팀B와 정상적으로 연관관계를 맺으나 팀A는 여전히 맴버1을 바라보고있다.
+
+![](./img/5_caution2.JPG)
+
+
+
+그래서 연관관계를 맺을때 이전 관계를 제거해줘야한다.
+
+```
+public void setTeam(Team team){
+	// 기존 관계 제거
+	if (this.team != null){
+		this.team.getMembers().remove(this);
+	}
+	// 새로운 관계
+	this.team = team;
+	team.getMembers().add(this);
+}
+```
+
+다만 맴버1이 주인이기 때문에 실제 DB에 저장할때는 문제가 되진 않는다. 문제는 팀A이 영속성 컨텍스트에 남아있다면 팀A에 맴버 호출시 맴버1이 호출된다.
+
+
+
+이처럼 관계형 데이터베이스에서는 외래키 하나만으로 해결할 수 있지만 객체에서는 단방향 연관관계 2개를 양방향처럼 보이기 위해 많은 수고가 따른다.
+
+
+
+> 양방향 관계는 결국 단방향 관계에서 주인이 아닌 객체가 참조할 수 있는 기능을 추가해준 것이다.
+
+
+
+## 연관관계의 주인을 정하는 규칙
+
+- 단방향은 항상 외래 키가 있는 곳을 기준으로 매핑하면 된다.
+- 양방향에서는 다 쪽을 주인으로 선택한다.
+- 연관관계의 주인은 외래 키의 위치와 관련해서 정해야지 비즈니스 중요도로 접근하면 안된다.
+
+
 
 
 
 ## 실전 예제
 
-주문 시스템 만들기
+이전 장에서는 객체 참조를 사용하지 않고 테이블 구조를 따라 엔티티를 설정했다.(외래 키 사용)
 
-- 회원은 주문을 할 수있고
-- 주문당 여러개의 상품이 존재(N:M 관계)
-- 단 N:M 관계는 관계형 데이터베이스나 엔티티에서 거의 사용하지 않아 1:N으로 치환
-
-![](./img/4_uml.JPG)
+이번에는 연관관계를 매핑을 통해 설정을 바꿔준다.
 
 
 
-![](./img/4_erd.JPG)
+ERD는 이전과 동일하다(테이블 구조이기 때문에)
+
+![](./img/5_erd.JPG)
 
 
 
-![](./img/4_uml_sp.JPG)
+UML만  바뀐다.
 
-ㅉ
+![](./img/5_erd_d.JPG)
+
+
+
+### 결과
+
+연관관계를 표기하니 객체를 통해 호출할 수 있었다.
+
+간단한 결과
+
+![](./img/5_result.JPG)
+
+
+
+자세한 결과
+
+![](./img/5_result2.JPG)
+
+
+
+연관관계 주입 소스
+
+```
+Member member = new Member();
+member.setName("shininghyunho");
+member.setCity("seoul");
+member.setStreet("dongdaemooon");
+member.setZipcode("zachibang");
+em.persist(member);
+
+Order order = new Order();
+order.setStatus(OrderStatus.ORDER);
+order.setOrderDate(new Date());
+order.setMember(member); // member 관계매핑
+em.persist(order);
+
+Item item = new Item();
+item.setName("protein");
+item.setPrice(100);
+item.setStockQuantity(100);
+em.persist(item);
+
+OrderItem orderItem = new OrderItem();
+orderItem.setCount(10);
+orderItem.setOrderPrice(5);
+orderItem.setOrder(order); // order 관계매핑
+orderItem.setItem(item); // item 관계매핑
+em.persist(orderItem);
+```
+
+
+
+연관관계 매핑을 직접 해보니 규칙성이 보였다.
+
+```
+// 관계 owner
+@ManyToOne
+@JoinColumn(name = "MEMBER_ID") // 외래키 이름
+private Member member;
+
+// 관계 inverse
+@OneToMany(mappedBy = "order") // 주인이 정한 필드명
+List<OrderItem> orderItems = new ArrayList<OrderItem>();
+```
+
+관계 owner는 다의 관계고 조인컬럼(fk)을 사용하고
+
+관계 inverse는 일의 관계고 mappedBy 속성으로 owner의 필드명에 의해 map된다는걸 명시해준다. 

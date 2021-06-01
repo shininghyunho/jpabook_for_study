@@ -1,5 +1,7 @@
 package study.entity;
 
+import com.sun.org.apache.xpath.internal.operations.Or;
+
 import javax.persistence.*;
 
 @Entity
@@ -10,11 +12,15 @@ public class OrderItem {
     @Column(name = "ORDER_ITEM_ID")
     private Long id;
 
-    @Column(name = "ITEM_ID")
-    private Long itemId; // item fk
+    // 관계 inverse
+    @ManyToOne
+    @JoinColumn(name = "ITEM_ID") // 외래키 이름
+    private Item item; // item
 
-    @Column(name = "ORDER_ID")
-    private Long orderId; // order fk
+    // 관계 inverse
+    @ManyToOne
+    @JoinColumn(name = "ORDER_ID")
+    private Order order; // order
 
     private int orderPrice; // 주문 가격
     private int count; // 주문 수량
@@ -22,23 +28,6 @@ public class OrderItem {
     // getter setter
     public Long getId() {
         return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getItemId() {
-        return itemId;
-    }
-    public void setItemId(Long itemId) {
-        this.itemId = itemId;
-    }
-
-    public Long getOrderId() {
-        return orderId;
-    }
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
     }
 
     public int getOrderPrice() {
@@ -53,5 +42,36 @@ public class OrderItem {
     }
     public void setCount(int count) {
         this.count = count;
+    }
+
+    // item getter setter
+    public Item getItem(){return this.item;}
+    
+    // item -> orderItem 인 경우가 거의 없어서 단방향 설정
+    public void setItem(Item item){
+        this.item=item; // owner
+    }
+
+    // order getter setter
+    public Order getOrder(){return this.order;}
+
+    public void setOrder(Order order){
+        // 기존 inverse 에서 내 관계 끊기
+        if (this.order != null){
+            this.order.orderItems.remove(this);
+        }
+
+        // 새로운 관계
+        this.order=order; // owner
+        order.getOrderItems().add(this); // inverse
+    }
+
+    @Override
+    public String toString() {
+        return "OrderItem{" +
+                "id=" + id +
+                ", orderPrice=" + orderPrice +
+                ", count=" + count +
+                '}';
     }
 }

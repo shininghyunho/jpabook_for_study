@@ -1,9 +1,8 @@
 package study.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Item {
@@ -15,12 +14,14 @@ public class Item {
     private int price; // 상품 가격
     private int stockQuantity; // 재고 수량
 
+    /*
+    // 단방향 관계에서는 필요하지 않음.
+    @OneToMany(mappedBy = "item") // 주인이 정한 필드명
+    private List<OrderItem> orderItems = new ArrayList<OrderItem>();
+     */
     // getter setter
     public Long getId() {
         return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -42,5 +43,15 @@ public class Item {
     }
     public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
+    }
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", stockQuantity=" + stockQuantity +
+                '}';
     }
 }
