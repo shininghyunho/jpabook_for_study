@@ -46,7 +46,6 @@ public class OrderItem {
 
     // item getter setter
     public Item getItem(){return this.item;}
-    
     // item -> orderItem 인 경우가 거의 없어서 단방향 설정
     public void setItem(Item item){
         this.item=item; // owner

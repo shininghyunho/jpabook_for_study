@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 데이터 중심 설계의 잘못된 엔티티 예제
+ * chapter6 다대일 일대일 다대다 연관관계 매핑
  */
 public class Main {
     public static void main(String[] args){
@@ -43,10 +43,18 @@ public class Main {
         member.setZipcode("zachibang");
         em.persist(member);
 
+        Delivery delivery = new Delivery();
+        delivery.setCity("incheon");
+        delivery.setStreet("yeonsu");
+        delivery.setZipcode("bonga");
+        delivery.setStatus(DeliveryStatus.COMP);
+        em.persist(delivery);
+
         Order order = new Order();
         order.setStatus(OrderStatus.ORDER);
         order.setOrderDate(new Date());
         order.setMember(member); // member 관계매핑
+        order.setDelivery(delivery); // delivery 관계매핑
         em.persist(order);
 
         Item item = new Item();
@@ -62,22 +70,32 @@ public class Main {
         orderItem.setItem(item); // item 관계매핑
         em.persist(orderItem);
 
+        Category category = new Category();
+        category.setName("food");
+        em.persist(category);
+
+        ItemCategory itemCategory = new ItemCategory();
+        itemCategory.setItem(item);
+        itemCategory.setCategory(category);
+        em.persist(itemCategory);
+
         // print
         List<Member> members = em.createQuery("select m from Member m",Member.class).getResultList();
         for (Member newMember:members){
-            //System.out.println("맴버 이름 : "+newMember.getName());
             List<Order> orders = newMember.getOrders();
             System.out.println(newMember.toString());
             for(Order newOrder:orders){
-                //System.out.print("주문 날짜 : ");
-                //System.out.println(newOrder.getOrderDate());
                 System.out.println(newOrder.toString());
+                System.out.println(newOrder.getDelivery().toString());
                 List<OrderItem> orderItems = newOrder.getOrderItems();
                 for(OrderItem newOrderItem:orderItems){
                     System.out.println(newOrderItem.toString());
-                    System.out.println(newOrderItem.getItem().toString());
-                    //System.out.println("주문 갯수 : "+newOrderItem.getCount());
-                    //System.out.println("상품 이름 : "+newOrderItem.getItem().getName());
+                    Item newItem = newOrderItem.getItem();
+                    List<ItemCategory> itemCategories = item.getItemCategories();
+                    for (ItemCategory newItemCategory : itemCategories){
+                        System.out.println(newItemCategory.toString());
+                        System.out.println(newItemCategory.getCategory().toString());
+                    }
                 }
             }
         }

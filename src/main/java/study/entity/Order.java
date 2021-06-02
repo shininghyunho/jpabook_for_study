@@ -23,6 +23,11 @@ public class Order {
     @OneToMany(mappedBy = "order") // 주인이 정한 필드명
     List<OrderItem> orderItems = new ArrayList<OrderItem>();
 
+    // delivery
+    @OneToOne
+    @JoinColumn(name = "DELIVERY_ID")
+    private Delivery delivery;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date orderDate;
 
@@ -56,6 +61,19 @@ public class Order {
 
     // orderItem getter
     public List<OrderItem> getOrderItems(){return this.orderItems;}
+
+    // delivery
+    public Delivery getDelivery() { return delivery; }
+    public void setDelivery(Delivery delivery) {
+        // inverse 에서 주인 제거
+        if (this.delivery != null){
+            delivery.setOrder(null);
+        }
+        
+        // 새로운 연관관계
+        this.delivery = delivery;
+        delivery.setOrder(this);
+    }
 
     @Override
     public String toString() {
