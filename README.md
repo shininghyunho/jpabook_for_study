@@ -372,7 +372,7 @@ for (Member member : members){
 
 그래서 연결 엔티티를 사용해준다.
 
-![](./img/6_NN_MP_entity.JPG)
+![](./img/6_NN_mp_entity.JPG)
 
 다시 일대다, 다대일 관계로 표현이 된것이다.
 
