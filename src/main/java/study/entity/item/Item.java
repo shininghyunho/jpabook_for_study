@@ -1,11 +1,15 @@
-package study.entity;
+package study.entity.item;
+
+import study.entity.Category;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Item {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "DTYPE")
+public abstract class Item {
     @Id @GeneratedValue
     @Column(name = "ITEM_ID")
     private Long id;
@@ -14,8 +18,8 @@ public class Item {
     private int price; // 상품 가격
     private int stockQuantity; // 재고 수량
 
-    @OneToMany(mappedBy = "item")
-    private List<ItemCategory> itemCategories = new ArrayList<ItemCategory>();
+    @ManyToMany(mappedBy = "items")
+    private List<Category> categories = new ArrayList<Category>();
 
     // getter setter
     public Long getId() {
@@ -43,7 +47,7 @@ public class Item {
         this.stockQuantity = stockQuantity;
     }
 
-    public List<ItemCategory> getItemCategories() { return itemCategories; }
+    public List<Category> getCategories(){ return categories; }
 
     @Override
     public String toString() {

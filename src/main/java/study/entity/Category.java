@@ -1,5 +1,7 @@
 package study.entity;
 
+import study.entity.item.Item;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +14,11 @@ public class Category {
 
     private String name;
 
-    @OneToMany(mappedBy = "category")
-    private List<ItemCategory> itemCategories = new ArrayList<ItemCategory>();
+    @ManyToMany
+    @JoinTable(name = "ITEM_CATEGORY",
+            joinColumns = @JoinColumn(name = "CATEGORY_ID"),
+            inverseJoinColumns = @JoinColumn(name = "ITEM_ID"))
+    private List<Item> items = new ArrayList<Item>();
 
     // getter setter
     public Long getId() { return id; }
@@ -21,7 +26,11 @@ public class Category {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public List<ItemCategory> getItemCategories() { return itemCategories; }
+    public List<Item> getItems() { return items; }
+    public void addItem(Item item) {
+        this.items.add(item);
+        item.getCategories().add(this);
+    }
 
     @Override
     public String toString() {

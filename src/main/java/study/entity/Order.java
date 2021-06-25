@@ -9,7 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name="ORDERS")
-public class Order {
+public class Order extends BaseEntity{
     @Id @GeneratedValue
     @Column(name="ORDER_ID")
     private Long id;
@@ -51,7 +51,7 @@ public class Order {
         // 기존 관계 제거
         // (inverse 관계 제거, 주인만 변경되니 수동으로 없애줘야함)
         if (this.member != null){
-            member.getOrders().remove(this);
+            this.member.getOrders().remove(this); // 6장 수정 필요
         }
 
         // 새로운 연관관계
@@ -67,7 +67,7 @@ public class Order {
     public void setDelivery(Delivery delivery) {
         // inverse 에서 주인 제거
         if (this.delivery != null){
-            delivery.setOrder(null);
+            this.delivery.setOrder(null);
         }
         
         // 새로운 연관관계

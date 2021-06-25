@@ -1,6 +1,6 @@
 package study.entity;
 
-import com.sun.org.apache.xpath.internal.operations.Or;
+import study.entity.item.Item;
 
 import javax.persistence.*;
 
@@ -12,12 +12,12 @@ public class OrderItem {
     @Column(name = "ORDER_ITEM_ID")
     private Long id;
 
-    // 관계 inverse
+    // 관계 주인
     @ManyToOne
     @JoinColumn(name = "ITEM_ID") // 외래키 이름
     private Item item; // item
 
-    // 관계 inverse
+    // 관계 주인
     @ManyToOne
     @JoinColumn(name = "ORDER_ID")
     private Order order; // order

@@ -1,6 +1,10 @@
 package study;
 
 import study.entity.*;
+import study.entity.item.Album;
+import study.entity.item.Book;
+import study.entity.item.Item;
+import study.entity.item.Movie;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -41,6 +45,8 @@ public class Main {
         member.setCity("seoul");
         member.setStreet("dongdaemooon");
         member.setZipcode("zachibang");
+        member.setCreatedDate(new Date());
+        member.setLastModifiedDate(new Date());
         em.persist(member);
 
         Delivery delivery = new Delivery();
@@ -55,29 +61,48 @@ public class Main {
         order.setOrderDate(new Date());
         order.setMember(member); // member 관계매핑
         order.setDelivery(delivery); // delivery 관계매핑
+        order.setCreatedDate(new Date());
+        order.setLastModifiedDate(new Date());
         em.persist(order);
 
-        Item item = new Item();
-        item.setName("protein");
-        item.setPrice(100);
-        item.setStockQuantity(100);
-        em.persist(item);
+        Album album = new Album();
+        album.setName("album name");
+        album.setPrice(100);
+        album.setStockQuantity(10);
+        album.setArtist("album artist");
+        album.setEtc("etc...");
+        em.persist(album);
+
+        Book book = new Book();
+        book.setName("book name");
+        book.setPrice(101);
+        book.setStockQuantity(11);
+        book.setAuthor("book author");
+        book.setIsbn("isbn...");
+        em.persist(book);
+
+        Movie movie = new Movie();
+        movie.setName("movie name");
+        movie.setPrice(102);
+        movie.setStockQuantity(12);
+        movie.setDirector("movie director");
+        movie.setActor("movie actor");
+        em.persist(movie);
 
         OrderItem orderItem = new OrderItem();
         orderItem.setCount(10);
         orderItem.setOrderPrice(5);
         orderItem.setOrder(order); // order 관계매핑
-        orderItem.setItem(item); // item 관계매핑
+        orderItem.setItem(album); // item 관계매핑
         em.persist(orderItem);
 
-        Category category = new Category();
-        category.setName("food");
-        em.persist(category);
 
-        ItemCategory itemCategory = new ItemCategory();
-        itemCategory.setItem(item);
-        itemCategory.setCategory(category);
-        em.persist(itemCategory);
+        Category category = new Category();
+        category.setName("all");
+        category.addItem(album);
+        category.addItem(book);
+        category.addItem(movie);
+        em.persist(category);
 
         // print
         List<Member> members = em.createQuery("select m from Member m",Member.class).getResultList();
@@ -91,11 +116,8 @@ public class Main {
                 for(OrderItem newOrderItem:orderItems){
                     System.out.println(newOrderItem.toString());
                     Item newItem = newOrderItem.getItem();
-                    List<ItemCategory> itemCategories = item.getItemCategories();
-                    for (ItemCategory newItemCategory : itemCategories){
-                        System.out.println(newItemCategory.toString());
-                        System.out.println(newItemCategory.getCategory().toString());
-                    }
+                    System.out.println(newItem.toString());
+                    System.out.println(newItem.getCategories().get(0).toString());
                 }
             }
         }
