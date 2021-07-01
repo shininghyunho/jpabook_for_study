@@ -13,12 +13,12 @@ public class OrderItem {
     private Long id;
 
     // 관계 주인
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ITEM_ID") // 외래키 이름
     private Item item; // item
 
     // 관계 주인
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ORDER_ID")
     private Order order; // order
 

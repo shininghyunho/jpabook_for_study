@@ -20,11 +20,11 @@ public class Order extends BaseEntity{
     private Member member;
 
     // 관계 inverse
-    @OneToMany(mappedBy = "order") // 주인이 정한 필드명
+    @OneToMany(cascade = CascadeType.ALL,mappedBy = "order") // 주인이 정한 필드명
     List<OrderItem> orderItems = new ArrayList<OrderItem>();
 
     // delivery
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "DELIVERY_ID")
     private Delivery delivery;
 

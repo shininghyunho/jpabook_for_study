@@ -54,7 +54,7 @@ public class Main {
         delivery.setStreet("yeonsu");
         delivery.setZipcode("bonga");
         delivery.setStatus(DeliveryStatus.COMP);
-        em.persist(delivery);
+        //em.persist(delivery);
 
         Order order = new Order();
         order.setStatus(OrderStatus.ORDER);
@@ -63,7 +63,6 @@ public class Main {
         order.setDelivery(delivery); // delivery 관계매핑
         order.setCreatedDate(new Date());
         order.setLastModifiedDate(new Date());
-        em.persist(order);
 
         Album album = new Album();
         album.setName("album name");
@@ -94,8 +93,8 @@ public class Main {
         orderItem.setOrderPrice(5);
         orderItem.setOrder(order); // order 관계매핑
         orderItem.setItem(album); // item 관계매핑
-        em.persist(orderItem);
-
+        //em.persist(orderItem);
+        em.persist(order); // delivery, orderItem 영속성 전이
 
         Category category = new Category();
         category.setName("all");
