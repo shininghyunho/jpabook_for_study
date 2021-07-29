@@ -1,7 +1,5 @@
 package study.entity;
 
-import com.sun.org.apache.xpath.internal.operations.Or;
-
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;

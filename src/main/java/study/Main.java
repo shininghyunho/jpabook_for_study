@@ -42,17 +42,21 @@ public class Main {
     public static void do_something(EntityManager em){
         Member member = new Member();
         member.setName("shininghyunho");
-        member.setCity("seoul");
+        member.setAddress(new Address("seoul","dongdaemooon","zachibang"));
+        /*member.setCity("seoul");
         member.setStreet("dongdaemooon");
         member.setZipcode("zachibang");
+        */
         member.setCreatedDate(new Date());
         member.setLastModifiedDate(new Date());
         em.persist(member);
 
         Delivery delivery = new Delivery();
-        delivery.setCity("incheon");
+        delivery.setAddress(new Address("incheon","yeonsu","bonga"));
+        /*delivery.setCity("incheon");
         delivery.setStreet("yeonsu");
         delivery.setZipcode("bonga");
+        */
         delivery.setStatus(DeliveryStatus.COMP);
         //em.persist(delivery);
 

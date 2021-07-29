@@ -12,9 +12,9 @@ public class Member extends BaseEntity{
 
     private String name;
 
-    private String city;
-    private String street;
-    private String zipcode;
+    // embedded type
+    @Embedded
+    private Address address;
 
     // 관계 inverse
     @OneToMany(mappedBy = "member") // 주인이 정한 필드명
@@ -27,18 +27,16 @@ public class Member extends BaseEntity{
     public String getName(){return this.name;}
     public void setName(String name){this.name=name;}
 
-    public String getCity(){return this.city;}
-    public void setCity(String city){this.city=city;}
-
-    public String getStreet(){return this.street;}
-    public void setStreet(String street){this.street=street;}
-
-    public String getZipcode(){return this.zipcode;}
-    public void setZipcode(String zipcode){this.zipcode=zipcode;}
-
     // orders getter 주인이 아니기에 setter 는 없음
     public List<Order> getOrders(){
         return this.orders;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     @Override
@@ -46,9 +44,6 @@ public class Member extends BaseEntity{
         return "Member{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", city='" + city + '\'' +
-                ", street='" + street + '\'' +
-                ", zipcode='" + zipcode + '\'' +
                 '}';
     }
 }
